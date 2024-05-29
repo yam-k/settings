@@ -1,0 +1,5 @@
+emacs/*
+emacs/*/
+!emacs/init.el
+!emacs/utils/
+!emacs/utils/slime-cape.el
