@@ -1,4 +1,4 @@
- ;;; init.el --- GNU Emacs settings. -*- lexical-binding: t; coding: utf-8 -*-
+;;; init.el --- GNU Emacs settings. -*- lexical-binding: t; coding: utf-8 -*-
 
 ;;; 設定環境の準備 ===================================================
 ;;;; package ---------------------------------------------------------
@@ -21,7 +21,6 @@ FUNCはpackage-install、ARGSはpackage-installに渡す引数。"
 
 ;;;; define-keyの代替マクロ ------------------------------------------
 (defmacro setkey (map key function &rest args)
-  ;; bind-keysの書式が好きじゃないので、自前で準備したマクロ。
   "キーバインド設定用マクロ.
 
 (setkey global-map
@@ -31,7 +30,7 @@ FUNCはpackage-install、ARGSはpackage-installに渡す引数。"
 
 MAPは設定したいキーマップ、KEYは`kbd'に渡せるキーシーケンス文字列、
 FUNCTIONはキーシーケンスに対して設定したい関数。
-ARGSは、[KEY FUNCTION ...]。"
+ARGSは、[KEY FUNCTION]..."
   (declare (indent defun))
   (let ((sets (list (cons key function))))
     (while args
@@ -238,7 +237,7 @@ ARGSは、[KEY FUNCTION ...]。"
 (with-eval-after-load 'outline
   (setkey outline-minor-mode-map
     "<tab>" #'outline-cycle
-    "<backtab>" #'outline-cycle-buffer
+    "<backtab>" #'outline-cycle-buffer ;Shift+TAB
     ))
 
 ;;;; org -------------------------------------------------------------
@@ -371,6 +370,9 @@ ARGSは、[KEY FUNCTION ...]。"
 ;;;; ielm ------------------------------------------------------------
 (setkey development-map "i" #'ielm)
 
+;;;; eshell ----------------------------------------------------------
+(setkey development-map "e" #'eshell)
+
 ;;;; treesit-auto ----------------------------------------------------
 (package-install 'treesit-auto)
 
@@ -402,7 +404,127 @@ ARGSは、[KEY FUNCTION ...]。"
   )
 
 ;;; その他 ===========================================================
-;;;; pulseaudio-utilsのコントロール ----------------------------------
+;;;; popper ----------------------------------------------------------
+(package-install 'popper)
+(setopt
+ popper-reference-buffers '(
+                            messages-buffer-mode
+                            ;; special-mode
+                            ;; emacs-lisp-compilation-mode
+                            help-mode
+                            slime-repl-mode
+                            inferior-emacs-lisp-mode
+                            comint-mode
+                            compilation-mode
+                            )
+ popper-mode t
+ popper-echo-mode t
+ )
+
+(setkey global-map
+  "C-@" #'popper-toggle
+  "M-@" #'popper-cycle
+  "C-M-@" #'popper-toggle-type
+  )
+
+;;;; which-key -------------------------------------------------------
+(package-install 'which-key)
+(setopt
+ which-key-mode t
+ )
+(add-elements-to-list 'which-key-replacement-alist
+  '(("\\`C-c c\\'" . nil) . (nil . "corfu/cape"))
+  '(("\\`C-c C-o\\'" . nil) . (nil . "outline"))
+  )
+
+;;;; blackout --------------------------------------------------------
+(package-install 'blackout)
+
+(blackout 'eldoc-mode)
+(blackout 'global-eldoc-mode)
+(blackout 'whitespace-mode)
+(blackout 'global-whitespace-mode)
+(blackout 'which-key-mode)
+
+;;;; exwm ------------------------------------------------------------
+;;;;; 基本設定 .......................................................
+(when (eq system-type 'gnu/linux)
+  (package-install 'exwm))
+
+(add-hook 'exwm-update-class-hook
+          (lambda ()
+            (exwm-workspace-rename-buffer exwm-class-name)))
+
+(setopt
+ exwm-input-simulation-keys `(
+                              (,(kbd "C-b") . [left])
+                              (,(kbd "C-f") . [right])
+                              (,(kbd "C-p") . [up])
+                              (,(kbd "C-n") . [down])
+                              (,(kbd "C-a") . [home])
+                              (,(kbd "C-e") . [end])
+                              (,(kbd "M-v") . [prior])
+                              (,(kbd "C-v") . [next])
+                              (,(kbd "C-h") . [backspace])
+                              (,(kbd "C-d") . [delete])
+                              (,(kbd "C-k") . [S-end delete])
+                              )
+ )
+
+(setopt
+ exwm-floating-border-width 3
+ exwm-floating-border-color "#ffbbee"
+ )
+
+(with-eval-after-load 'exwm
+  (setopt
+   menu-bar-mode nil
+   tool-bar-mode nil
+   scroll-bar-mode nil
+   fringe-mode 1
+   tab-bar-show nil
+
+   display-time-format "[%F %R]"
+   display-time-mode t
+   )
+
+  (setkey global-map
+    "s-r" #'exwm-reset
+    "s-w" #'exwm-workspace-switch
+    )
+  )
+
+;;;;; システムトレイ .................................................
+(with-eval-after-load 'exwm
+  (require 'exwm-systemtray)
+  (exwm-systemtray-enable)
+  )
+
+;;;;; バーとかのトグル ...............................................
+(with-eval-after-load 'exwm
+  (defun fringe-minimize ()
+    "編集領域両側のfringeを最小化(size=1)したり戻したり(size=8)."
+    (interactive)
+    (cond ((null fringe-mode) (setopt fringe-mode 1))
+          ((= fringe-mode 1) (setopt fringe-mode 8))
+          (t (setopt fringe-mode 1))))
+
+  (defun tab-bar-show ()
+    "タブバーの表示をトグルする."
+    (interactive)
+    (cond ((null tab-bar-show) (setopt tab-bar-show t))
+          (t (setopt tab-bar-show nil))))
+
+  (setkey toggle-map
+    "M" #'menu-bar-mode
+    "T" #'tool-bar-mode
+    "S" #'scroll-bar-mode
+    "F" #'fringe-minimize
+    "C-t" #'tab-bar-show
+    )
+  )
+
+;;;;; pulseaudio-utilsのコントロール .................................
 (with-eval-after-load 'exwm
   (defun audio-raise-volume ()
     "システムの音量を上げる."
@@ -431,123 +553,8 @@ ARGSは、[KEY FUNCTION ...]。"
   (exwm-input-set-key (kbd "s-M") #'audio-toggle-mute)
   )
 
-;;;; popper ----------------------------------------------------------
-(package-install 'popper)
-(setopt
- popper-reference-buffers '(
-                            messages-buffer-mode
-                            ;; special-mode
-                            ;; emacs-lisp-compilation-mode
-                            help-mode
-                            slime-repl-mode
-                            inferior-emacs-lisp-mode
-                            comint-mode
-                            compilation-mode
-                            )
- popper-mode t
- popper-echo-mode t
- )
-
-(setkey global-map
-  "C-@" #'popper-toggle
-  "M-@" #'popper-cycle
-  "C-M-@" #'popper-toggle-type
-  )
-
-;;;; which-key
-(package-install 'which-key)
-(setopt
- which-key-mode t
- )
-(add-elements-to-list 'which-key-replacement-alist
-  '(("\\`C-c c\\'" . nil) . (nil . "corfu/cape"))
-  '(("\\`C-c C-o\\'" . nil) . (nil . "outline"))
-  )
-
-;;;; blackout --------------------------------------------------------
-(package-install 'blackout)
-
-(blackout 'eldoc-mode)
-(blackout 'global-eldoc-mode)
-(blackout 'whitespace-mode)
-(blackout 'global-whitespace-mode)
-(blackout 'which-key-mode)
-
-;;;; exwm ------------------------------------------------------------
-(when (eq system-type 'gnu/linux)
-  (package-install 'exwm))
-
-(add-hook 'exwm-update-class-hook
-          (lambda ()
-            (exwm-workspace-rename-buffer exwm-class-name)))
-
-(setq exwm-input-gloal-keys
-      `(
-        (,(kbd "s-r") . exwm-reset)
-        (,(kbd "s-w") . exwm-workspace-switch)
-        ))
-
-(setq exwm-input-simulation-keys
-      `(
-        (,(kbd "C-b") . [left])
-        (,(kbd "C-f") . [right])
-        (,(kbd "C-p") . [up])
-        (,(kbd "C-n") . [down])
-        (,(kbd "C-a") . [home])
-        (,(kbd "C-e") . [end])
-        (,(kbd "M-v") . [prior])
-        (,(kbd "C-v") . [next])
-        (,(kbd "C-h") . [backspace])
-        (,(kbd "C-d") . [delete])
-        (,(kbd "C-k") . [S-end delete])
-        ))
-
-(setopt
- exwm-floating-border-width 3
- exwm-floating-border-color "#ffbbee"
- )
-
-(with-eval-after-load 'exwm
-  (setopt
-   menu-bar-mode nil
-   tool-bar-mode nil
-   scroll-bar-mode nil
-   fringe-mode 1
-   tab-bar-show nil
-   ))
-
-(with-eval-after-load 'exwm
-  (setopt
-   display-time-format "[%F %R]"
-   display-time-mode t
-   ))
-
-(with-eval-after-load 'exwm
-  (require 'exwm-systemtray)
-  (exwm-systemtray-enable)
-  )
-
-(defun fringe-minimize ()
-  "編集領域両側のfringeを最小化(size=1)したり戻したり(size=8)."
-  (interactive)
-  (cond ((null fringe-mode) (setopt fringe-mode 1))
-        ((= fringe-mode 1) (setopt fringe-mode 8))
-        (t (setopt fringe-mode 1))))
-
-(defun tab-bar-show ()
-  "タブバーの表示をトグルする."
-  (interactive)
-  (cond ((null tab-bar-show) (setopt tab-bar-show t))
-        (t (setopt tab-bar-show nil))))
-
-(setkey toggle-map
-  "M" #'menu-bar-mode
-  "T" #'tool-bar-mode
-  "S" #'scroll-bar-mode
-  "F" #'fringe-minimize
-  "C-t" #'tab-bar-show
-  )
-
+;;;;; exwm-x .........................................................
+;; やめた。
 ;; (with-eval-after-load 'exwm
 ;;   (package-install 'exwm-x))
 
@@ -608,17 +615,15 @@ ARGSは、[KEY FUNCTION ...]。"
 ;;; 片付け ===========================================================
 (advice-remove #'package-install #'package-install-retry-advice)
 
-
-
-
-;;; 設定本体(emacs.org)の読み込み
-(let* ((source-file (expand-file-name "emacs.org" user-emacs-directory))
-       (generate-file (expand-file-name
-                       (file-name-nondirectory
-                        (file-name-with-extension source-file ".el"))
-                       tmp-dir)))
-  (when (file-exists-p source-file)
-    (require 'ob-tangle)
-    (org-babel-tangle-file source-file generate-file)
-    (when (file-exists-p generate-file)
-      (load-file generate-file))))
+;;; 設定本体(emacs.org)の読み込み ====================================
+;; やめた。
+;; (let* ((source-file (expand-file-name "emacs.org" user-emacs-directory))
+;;        (generate-file (expand-file-name
+;;                        (file-name-nondirectory
+;;                         (file-name-with-extension source-file ".el"))
+;;                        tmp-dir)))
+;;   (when (file-exists-p source-file)
+;;     (require 'ob-tangle)
+;;     (org-babel-tangle-file source-file generate-file)
+;;     (when (file-exists-p generate-file)
+;;       (load-file generate-file))))
