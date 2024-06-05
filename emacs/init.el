@@ -40,7 +40,7 @@ ARGSは、[KEY FUNCTION]..."
                    `(define-key ,map (kbd ,(car set)) ,(cdr set)))
                  (reverse sets)))))
 
-;;;; add-to-list
+;;;; add-to-list -----------------------------------------------------
 (defun add-elements-to-list (list-var &rest elements)
   "`add-to-list'をたくさん書く時に楽をする用の関数."
   (declare (indent defun))
@@ -283,7 +283,7 @@ ARGSは、[KEY FUNCTION]..."
                           entry (file "capture.org")
                           "* SOMEDAY %?\n%i"
                           :empty-lines-before 1)
-                         ("d" "よもやま"
+                         ("d" "徒然"
                           entry (file+olp+datetree "diary.org")
                           "* %?\n%T\n%i")
                          )
@@ -293,10 +293,15 @@ ARGSは、[KEY FUNCTION]..."
                     )
  )
 
+(define-prefix-command 'org-map)
 (setkey global-map
-  "C-c C-l" #'org-store-link
-  "C-c C-a" #'org-agenda
-  "C-c C-c" #'org-capture
+  "C-c o" 'org-map
+  )
+
+(setkey org-map
+  "l" #'org-store-link
+  "a" #'org-agenda
+  "c" #'org-capture
   )
 
 ;;;;; エクスポート ..................................................
@@ -349,6 +354,12 @@ ARGSは、[KEY FUNCTION]..."
    )
   )
 
+;;;; rust-mode -------------------------------------------------------
+(when (eq system-type 'windows-nt) ;linuxならrust-ts-modeを使う
+  (package-install 'rust-mode)
+  (package-install 'toml-mode)
+  )
+
 ;;; 開発環境 =========================================================
 ;;;; slime -----------------------------------------------------------
 (package-install 'slime)
@@ -374,17 +385,22 @@ ARGSは、[KEY FUNCTION]..."
 (setkey development-map "e" #'eshell)
 
 ;;;; treesit-auto ----------------------------------------------------
-(package-install 'treesit-auto)
+(when (eq system-type 'gnu/linux)
+  (package-install 'treesit-auto)
 
-(require 'treesit-auto)
-(treesit-auto-add-to-auto-mode-alist 'all)
-(setopt
- treesit-auto-install t
- global-treesit-auto-mode t
- )
+  (require 'treesit-auto)
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (setopt
+   treesit-auto-install t
+   global-treesit-auto-mode t
+   )
+  )
 
 ;;;; eglot -----------------------------------------------------------
-(add-hook 'rust-ts-mode-hook #'eglot-ensure)
+(if (eq system-type 'gnu/linux)
+    (add-hook 'rust-ts-mode-hook #'eglot-ensure)
+  (add-hook 'rust-mode-hook #'eglot-ensure)
+  )
 
 (with-eval-after-load 'flymake
   (setkey flymake-mode-map
@@ -449,7 +465,8 @@ ARGSは、[KEY FUNCTION]..."
 ;;;; exwm ------------------------------------------------------------
 ;;;;; 基本設定 .......................................................
 (when (eq system-type 'gnu/linux)
-  (package-install 'exwm))
+  (package-install 'exwm)
+  )
 
 (add-hook 'exwm-update-class-hook
           (lambda ()
