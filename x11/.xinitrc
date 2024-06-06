@@ -4,8 +4,9 @@ xsetroot -cursor_name left_ptr
 # Set keyboard repeat rate.
 #xset r rate 200 60
 
+dropbox start
+
 # tint2 &
 # nm-tray &
 caffeine-indicator &
-dropbox start
 emacs -f exwm-enable
