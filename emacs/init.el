@@ -397,6 +397,7 @@ ARGSは、[KEY FUNCTION]..."
     (package-install 'rust-mode)
     (package-install 'toml-mode)
     (add-hook 'rust-mode-hook #'eglot-ensure) ;tree-sitterを使わない
+    )
   )
 
 ;;;; flymake ---------------------------------------------------------
