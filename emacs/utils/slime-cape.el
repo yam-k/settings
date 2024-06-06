@@ -1,3 +1,9 @@
+;; 以下のページのコピペ。slimeでcorfu/capeの補完を使えるようにする。
+;; https://www.reddit.com/r/emacs/comments/12u4qr6/how_to_add_the_slimecompany_to_capecorfu/
+
+;; (slime-setup '(slime-fancy slime-cape))
+;; として使う。
+
 (require 'slime)
 (require 'slime-company)
 (require 'cape)
@@ -17,8 +23,8 @@
    ))
 
 (defun slime-cape-maybe-enable ()
-	(when (slime-company-active-p)
-      (add-to-list 'completion-at-point-functions cape-slime-backend)
-	  ))
+  (when (slime-company-active-p)
+    (add-to-list 'completion-at-point-functions cape-slime-backend)
+    ))
 
 (provide 'slime-cape)

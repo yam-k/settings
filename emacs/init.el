@@ -250,8 +250,9 @@ ARGSは、[KEY FUNCTION]..."
                       "SOMEDAY(s)"
                       "|"
                       "DONE(d!)"
-                      "ABORT(a@)"))
- org-structure-template-alist '(
+                      "ABORT(a@)"
+                      ))
+ org-structure-template-alist '( ;`C-c C-,'で表示される選択肢
                                 ("c" . "center")
                                 ("cl" . "src common-lisp")
                                 ("C" . "comment")
@@ -266,7 +267,7 @@ ARGSは、[KEY FUNCTION]..."
                                 ("s" . "src")
                                 ("v" . "verse")
                                 )
- org-capture-templates '(
+ org-capture-templates '( ;org-captureの選択肢
                          ("m" "メモ"
                           entry (file "capture.org")
                           "* %?\n%T\n%i"
@@ -287,7 +288,7 @@ ARGSは、[KEY FUNCTION]..."
                           entry (file+olp+datetree "diary.org")
                           "* %?\n%T\n%i")
                          )
- org-agenda-files `(
+ org-agenda-files `( ;org-agendaで表示するファイル
                     ,(expand-file-name "capture.org" org-directory)
                     ,(expand-file-name "diary.org" org-directory)
                     )
@@ -297,7 +298,6 @@ ARGSは、[KEY FUNCTION]..."
 (setkey global-map
   "C-c o" 'org-map
   )
-
 (setkey org-map
   "l" #'org-store-link
   "a" #'org-agenda
@@ -305,17 +305,17 @@ ARGSは、[KEY FUNCTION]..."
   )
 
 ;;;;; エクスポート ..................................................
-(package-install 'htmlize)
 (setopt
  org-export-default-language "ja"
- org-export-backends '(
+ org-export-backends '( ;変換したい形式
                        html
                        latex
                        odt
                        )
  )
 
-(package-install 'ox-pandoc)
+(package-install 'htmlize) ;org→htmlの変換に必要
+(package-install 'ox-pandoc) ;pandocを使った変換
 (with-eval-after-load 'ox
   (require 'ox-pandoc))
 
@@ -334,14 +334,14 @@ ARGSは、[KEY FUNCTION]..."
 
 (with-eval-after-load 'ox-latex
   (setopt
-   org-latex-classes '(("article"
+   org-latex-classes '(("article" ;通常
                         "\\documentclass[paper=a4,article]{jlreq}"
                         ("\\section{%s}" . "\\section*{%s}")
                         ("\\subsection{%s}" . "\\subsection*{%s}")
                         ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                         ("\\paragraph{%s}" . "\\paragraph*{%s}")
                         ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
-                       ("book"
+                       ("book" ;文庫
                         "\\documentclass[paper=a6,book,tate]{jlreq}"
                         ("\\part{%s}" . "\\part*{%s}")
                         ("\\section{%s}" . "\\section*{%s}")
@@ -352,12 +352,6 @@ ARGSは、[KEY FUNCTION]..."
                        )
    org-latex-default-class "article"
    )
-  )
-
-;;;; rust-mode -------------------------------------------------------
-(when (eq system-type 'windows-nt) ;linuxならrust-ts-modeを使う
-  (package-install 'rust-mode)
-  (package-install 'toml-mode)
   )
 
 ;;; 開発環境 =========================================================
@@ -373,7 +367,7 @@ ARGSは、[KEY FUNCTION]..."
  )
 
 (with-eval-after-load 'slime
-  (slime-setup '(slime-fancy slime-cape))
+  (slime-setup '(slime-fancy slime-cape)) ;~/.emacs.d/utils/slime-cape.el
   )
 
 (setkey development-map "s" #'slime)
@@ -386,7 +380,7 @@ ARGSは、[KEY FUNCTION]..."
 
 ;;;; treesit-auto ----------------------------------------------------
 (when (eq system-type 'gnu/linux)
-  (package-install 'treesit-auto)
+  (package-install 'treesit-auto) ;tree-sitterを使い易くする
 
   (require 'treesit-auto)
   (treesit-auto-add-to-auto-mode-alist 'all)
@@ -396,12 +390,16 @@ ARGSは、[KEY FUNCTION]..."
    )
   )
 
-;;;; eglot -----------------------------------------------------------
+;;;; rust ------------------------------------------------------------
 (if (eq system-type 'gnu/linux)
-    (add-hook 'rust-ts-mode-hook #'eglot-ensure)
-  (add-hook 'rust-mode-hook #'eglot-ensure)
+    (add-hook 'rust-ts-mode-hook #'eglot-ensure) ;tree-sitterを使う
+  (progn
+    (package-install 'rust-mode)
+    (package-install 'toml-mode)
+    (add-hook 'rust-mode-hook #'eglot-ensure) ;tree-sitterを使わない
   )
 
+;;;; flymake ---------------------------------------------------------
 (with-eval-after-load 'flymake
   (setkey flymake-mode-map
     "M-n" #'flymake-goto-next-error
@@ -423,7 +421,7 @@ ARGSは、[KEY FUNCTION]..."
 ;;;; popper ----------------------------------------------------------
 (package-install 'popper)
 (setopt
- popper-reference-buffers '(
+ popper-reference-buffers '( ;popup化するバッファのリスト
                             messages-buffer-mode
                             ;; special-mode
                             ;; emacs-lisp-compilation-mode
@@ -448,13 +446,13 @@ ARGSは、[KEY FUNCTION]..."
 (setopt
  which-key-mode t
  )
-(add-elements-to-list 'which-key-replacement-alist
+(add-elements-to-list 'which-key-replacement-alist ;表示の変更
   '(("\\`C-c c\\'" . nil) . (nil . "corfu/cape"))
   '(("\\`C-c C-o\\'" . nil) . (nil . "outline"))
   )
 
 ;;;; blackout --------------------------------------------------------
-(package-install 'blackout)
+(package-install 'blackout) ;モードラインのモード表示を消す
 
 (blackout 'eldoc-mode)
 (blackout 'global-eldoc-mode)
@@ -465,7 +463,7 @@ ARGSは、[KEY FUNCTION]..."
 ;;;; exwm ------------------------------------------------------------
 ;;;;; 基本設定 .......................................................
 (when (eq system-type 'gnu/linux)
-  (package-install 'exwm)
+  (package-install 'exwm) ;Emacs X Window Manager
   )
 
 (add-hook 'exwm-update-class-hook
