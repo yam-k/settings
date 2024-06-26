@@ -75,8 +75,32 @@ ARGSは、[KEY FUNCTION]..."
 (face-spec-set 'fixed-pitch '((t :inherit default)))
 
 ;;;; 基本的な見た目 --------------------------------------------------
-(setopt
- custom-enabled-themes '(adwaita) ;テーマ
+(setopt ;modus-themes
+ modus-themes-operandi-color-overrides '((bg-main . "#fff7fb")
+                                         (bg-dim . "#ffe7ef")
+                                         (bg-alt . "#ffddef")
+                                         (bg-active . "#ffbbee")
+                                         (bg-inactive . "#ffe7ef"))
+
+ ;; modus-themes-syntax '(alt-syntax green-strings yellow-comments)
+ modus-themes-box-buttons '(flat accented)
+ ;; modus-themes-mode-line '(borderless accented)
+ ;; modus-themes-tabs-accented t
+ ;; modus-themes-completions '((matches . (background intense))
+ ;;                            (selection . (accented intense))
+ ;;                            (popup .  (accented intense)))
+ ;; modus-themes-fringes 'intense
+ ;; modus-themes-hl-line '(accented)
+ ;; modus-themes-intense-mouseovers t
+ ;; modus-themes-markup '(intense)
+ ;; modus-themes-paren-match '(intense)
+ ;; modus-themes-region '(accented)
+
+ custom-enabled-themes '(modus-operandi)
+ )
+
+(setopt ;bars
+ ;; custom-enabled-themes '(adwaita) ;テーマ
 
  menu-bar-mode t ;メニューバーは表示
  tool-bar-mode nil ;ツールバーは非表示
@@ -91,9 +115,10 @@ ARGSは、[KEY FUNCTION]..."
  scroll-conservatively 100 ;スクロールは1行ずつ
  savehist-mode t ;操作履歴を記録
  dired-dwim-target t ;diredを2画面ファイラっぽくする
+ use-short-answers t ;yes/noはy/nで
  )
 
-(advice-add #'yes-or-no-p :override #'y-or-n-p) ;yes/noはy/nで
+;; (advice-add #'yes-or-no-p :override #'y-or-n-p) ;yes/noはy/nで
 
 (setopt
  savehist-file (expand-file-name "history" tmp-dir) ;操作履歴の保存先
@@ -148,6 +173,8 @@ ARGSは、[KEY FUNCTION]..."
 
  show-paren-mode t ;対応する括弧を強調表示
  show-paren-style 'expression ;括弧の中身も強調表示
+
+ global-hl-line-mode t
  )
 
 ;;;; 行数・桁数 ------------------------------------------------------
@@ -223,8 +250,8 @@ ARGSは、[KEY FUNCTION]..."
   "C-c c w" #'cape-dict
   )
 
-(setopt kind-icon-default-face 'corfu-default)
-(add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+;; (setopt kind-icon-default-face 'corfu-default)
+;; (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
 
 ;;; 編集モード =======================================================
 ;;;; outline-magic ---------------------------------------------------
@@ -508,6 +535,9 @@ ARGSは、[KEY FUNCTION]..."
     "s-r" #'exwm-reset
     "s-w" #'exwm-workspace-switch
     )
+
+  (exwm-input-set-key (kbd "s-r") #'exwm-reset)
+  (exwm-input-set-key (kbd "s-w") #'exwm-workspace-switch)
   )
 
 ;;;;; システムトレイ .................................................
