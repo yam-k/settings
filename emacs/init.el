@@ -527,7 +527,7 @@ ARGSは、[KEY FUNCTION]..."
    fringe-mode 1
    tab-bar-show nil
 
-   display-time-format "[%F %R]"
+   display-time-format "[%F(%a) %R]"
    display-time-mode t
    )
 
