@@ -195,9 +195,15 @@ ARGSは、[KEY FUNCTION]..."
 
 (setkey global-map
   "C-h" #'delete-backward-char ;C-hをバックスペースに
-  "C-c t" 'toggle-map
-  "C-c d" 'development-map
+  "C-c t" #'toggle-map
+  "C-c d" #'development-map
   )
+
+(defun select-previous-window ()
+  (interactive)
+  (other-window -1))
+(setkey global-map
+  "C-x M-o" #'select-previous-window)
 
 (setkey toggle-map
   "i" #'display-fill-column-indicator-mode
@@ -589,11 +595,17 @@ ARGSは、[KEY FUNCTION]..."
                   "set-sink-mute" "@DEFAULT_SINK@" "toggle"))
 
   (setkey global-map
+    "<XF86AudioRaiseVolume>" #'audio-raise-volume
+    "<XF86AudioLowerVolume>" #'audio-lower-volume
+    "<XF86AudioMute>" #'audio-toggle-mute
     "s->" #'audio-raise-volume
     "s-<" #'audio-lower-volume
     "s-M" #'audio-toggle-mute
     )
 
+  (exwm-input-set-key (kbd "<XF86AudioRaiseVolume>") #'audio-raise-volume)
+  (exwm-input-set-key (kbd "<XF86AudioLowerVolume>") #'audio-lower-volume)
+  (exwm-input-set-key (kbd "<XF86AudioMute>") #'audio-toggle-mute)
   (exwm-input-set-key (kbd "s->") #'audio-raise-volume)
   (exwm-input-set-key (kbd "s-<") #'audio-lower-volume)
   (exwm-input-set-key (kbd "s-M") #'audio-toggle-mute)
