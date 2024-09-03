@@ -424,12 +424,19 @@ ARGSは、[KEY FUNCTION]..."
   )
 
 ;;;; rust ------------------------------------------------------------
+(package-install 'cargo-mode)
+(setopt compilation-scroll-output 'first-error)
+
 (if (eq system-type 'gnu/linux)
-    (add-hook 'rust-ts-mode-hook #'eglot-ensure) ;tree-sitterを使う
+    (progn
+      (add-hook 'rust-ts-mode-hook #'eglot-ensure) ;tree-sitterを使う
+      (add-hook 'rust-ts-mode-hook #'cargo-minor-mode)
+      )
   (progn
     (package-install 'rust-mode)
-    (package-install 'toml-mode)
+    (package-install 'cargo-mode)
     (add-hook 'rust-mode-hook #'eglot-ensure) ;tree-sitterを使わない
+    (add-hook 'rsut-mode-hook #'cargo-minor-mode)
     )
   )
 
@@ -481,8 +488,8 @@ ARGSは、[KEY FUNCTION]..."
  which-key-mode t
  )
 (add-elements-to-list 'which-key-replacement-alist ;表示の変更
-  '(("\\`C-c c\\'" . nil) . (nil . "corfu/cape"))
-  '(("\\`C-c C-o\\'" . nil) . (nil . "outline"))
+  '(("\\`C-c c\\'" . nil) . (nil . "corfu/cape-map"))
+  '(("\\`C-c C-o\\'" . nil) . (nil . "outline-map"))
   )
 
 ;;;; blackout --------------------------------------------------------
@@ -498,32 +505,32 @@ ARGSは、[KEY FUNCTION]..."
 ;;;;; 基本設定 .......................................................
 (when (eq system-type 'gnu/linux)
   (package-install 'exwm) ;Emacs X Window Manager
+
+  (add-hook 'exwm-update-class-hook
+            (lambda ()
+              (exwm-workspace-rename-buffer exwm-class-name)))
+
+  (setopt
+   exwm-input-simulation-keys `(
+                                (,(kbd "C-b") . [left])
+                                (,(kbd "C-f") . [right])
+                                (,(kbd "C-p") . [up])
+                                (,(kbd "C-n") . [down])
+                                (,(kbd "C-a") . [home])
+                                (,(kbd "C-e") . [end])
+                                (,(kbd "M-v") . [prior])
+                                (,(kbd "C-v") . [next])
+                                (,(kbd "C-h") . [backspace])
+                                (,(kbd "C-d") . [delete])
+                                (,(kbd "C-k") . [S-end delete])
+                                )
+   )
+
+  (setopt
+   exwm-floating-border-width 3
+   exwm-floating-border-color "#ffbbee"
+   )
   )
-
-(add-hook 'exwm-update-class-hook
-          (lambda ()
-            (exwm-workspace-rename-buffer exwm-class-name)))
-
-(setopt
- exwm-input-simulation-keys `(
-                              (,(kbd "C-b") . [left])
-                              (,(kbd "C-f") . [right])
-                              (,(kbd "C-p") . [up])
-                              (,(kbd "C-n") . [down])
-                              (,(kbd "C-a") . [home])
-                              (,(kbd "C-e") . [end])
-                              (,(kbd "M-v") . [prior])
-                              (,(kbd "C-v") . [next])
-                              (,(kbd "C-h") . [backspace])
-                              (,(kbd "C-d") . [delete])
-                              (,(kbd "C-k") . [S-end delete])
-                              )
- )
-
-(setopt
- exwm-floating-border-width 3
- exwm-floating-border-color "#ffbbee"
- )
 
 (with-eval-after-load 'exwm
   (setopt
@@ -537,13 +544,18 @@ ARGSは、[KEY FUNCTION]..."
    display-time-mode t
    )
 
-  (setkey global-map
-    "s-r" #'exwm-reset
-    "s-w" #'exwm-workspace-switch
-    )
-
   (exwm-input-set-key (kbd "s-r") #'exwm-reset)
   (exwm-input-set-key (kbd "s-w") #'exwm-workspace-switch)
+  (exwm-input-set-key (kbd "s-&")
+                      (lambda (command)
+                        (interactive (list (read-shell-command "$ ")))
+                        (start-process-shell-command command nil command)))
+  (mapcar (lambda (i)
+            (exwm-input-set-key (kbd (format "s-%d" i))
+                                (lambda ()
+                                  (interactive)
+                                  (exwm-workspace-switch-create i))))
+          (number-sequence 0 9))
   )
 
 ;;;;; システムトレイ .................................................
@@ -593,15 +605,6 @@ ARGSは、[KEY FUNCTION]..."
     (interactive)
     (call-process "pactl" nil nil nil
                   "set-sink-mute" "@DEFAULT_SINK@" "toggle"))
-
-  (setkey global-map
-    "<XF86AudioRaiseVolume>" #'audio-raise-volume
-    "<XF86AudioLowerVolume>" #'audio-lower-volume
-    "<XF86AudioMute>" #'audio-toggle-mute
-    "s->" #'audio-raise-volume
-    "s-<" #'audio-lower-volume
-    "s-M" #'audio-toggle-mute
-    )
 
   (exwm-input-set-key (kbd "<XF86AudioRaiseVolume>") #'audio-raise-volume)
   (exwm-input-set-key (kbd "<XF86AudioLowerVolume>") #'audio-lower-volume)
