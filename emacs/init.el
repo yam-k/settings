@@ -582,7 +582,7 @@ ARGSは、[KEY FUNCTION]..."
 ;;;;; システムトレイ .................................................
 (with-eval-after-load 'exwm
   (require 'exwm-systemtray)
-  (exwm-systemtray-enable)
+  (exwm-systemtray-mode)
   )
 
 ;;;;; バーとかのトグル ...............................................
